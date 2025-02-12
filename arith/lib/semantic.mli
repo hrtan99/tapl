@@ -8,3 +8,4 @@ open Syntax
 
 
 val smallStepEval : term -> term
+val bigStepEval : term -> term

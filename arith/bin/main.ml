@@ -104,7 +104,8 @@ and processCmds cmd =
 and processCmd cmd = match cmd with
     Import file -> processFile file
   | Eval(_, t) -> 
-      let t' = smallStepEval t in 
+      (* let t' = smallStepEval t in  *)
+      let t' = bigStepEval t in
       printATerm true t';
       force_newline ();
       ()
