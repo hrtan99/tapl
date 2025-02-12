@@ -18,4 +18,5 @@ type command =
 
 (* Printing *)
 val printTerm : term -> unit
+val printATerm : bool -> term -> unit
 val termInfo : term -> info
