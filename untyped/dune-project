@@ -1,6 +1,6 @@
 (lang dune 3.0)
 
-(name arith)
+(name untyped)
 
 (generate_opam_files true)
 
@@ -16,9 +16,9 @@
 (documentation https://url/to/documentation)
 
 (package
- (name arith)
+ (name untyped)
  (synopsis "A short synopsis")
- (description "Implementation of simple arithmetic language")
+ (description "Implementation of simple untyped lambda calculus")
  (depends ocaml dune)
  (tags
   (topics "to describe" your project)))
