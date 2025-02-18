@@ -1,0 +1,4 @@
+(executable
+ (public_name SimplyTyped)
+ (name main)
+ (libraries SimplyTyped))
