@@ -11,3 +11,6 @@ open Syntax
 
 val isVal : context -> term -> bool
 val eval : context -> term -> term
+
+(* ------------------------   TYPING RULES  ------------------------ *)
+val typeOf : context -> term -> ty

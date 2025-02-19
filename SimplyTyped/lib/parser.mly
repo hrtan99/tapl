@@ -23,6 +23,7 @@ open Syntax
 /* Keyword tokens */
 %token <Support.Error.info> IMPORT
 %token <Support.Error.info> LAMBDA
+%token <Support.Error.info> IF
 %token <Support.Error.info> THEN
 %token <Support.Error.info> ELSE
 %token <Support.Error.info> TRUE
@@ -132,7 +133,7 @@ AType :
     LPAREN Type RPAREN  
            { $2 } 
   | BOOL
-      { fun ctx -> TypeBool }
+      { fun _ -> TypeBool }
 
 /* An "arrow type" is a sequence of atomic types separated by
    arrows. */
@@ -173,9 +174,9 @@ ATerm :
       { fun ctx ->
           TermVar($1.i, name2index $1.i ctx $1.v, ctxLength ctx) }
   | TRUE
-      { fun ctx -> TermTrue($1) }
+      { fun _ -> TermTrue($1) }
   | FALSE
-      { fun ctx -> TermFalse($1) }
+      { fun _ -> TermFalse($1) }
 
 
 
