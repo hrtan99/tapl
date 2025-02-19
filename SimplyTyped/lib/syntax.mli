@@ -3,12 +3,20 @@
 open Support.Error
 
 (* Data type definitions *)
+
+type ty = 
+  | TypeBool
+  | TypeArr of ty * ty
+
 type term = 
   | TermVar of info * int * int
-  | TermAbs of info * string * term
+  | TermAbs of info * string * ty * term
   | TermApp of info * term * term
+  | TermTrue of info
+  | TermFalse of info
+  | TermIf of info * term * term * term
 
-type binding = NameBind
+type binding = NameBind | VarBind of ty
 
 type command = 
     Import of string
@@ -26,7 +34,9 @@ val isNameBound : context -> string -> bool
 val getBinding : info -> context -> int -> binding
 val index2name : info -> context -> int -> string
 val name2index : info -> context -> string -> int
+val getTypeFromContext : info -> context -> int -> ty
 
+(* Shifting *)
 val termShift : int -> term -> term
 val termSubstTop : term -> term -> term
 

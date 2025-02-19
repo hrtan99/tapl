@@ -119,20 +119,42 @@ Command :
 
 /* Right-hand sides of top-level bindings */
 Binder :
-    SLASH
-      { fun _ -> NameBind }
-      
+    COLON Type 
+      { fun ctx -> VarBind($2 ctx) }
+
+/* All type expressions */
+Type :
+    ArrowType
+                { $1 }
+
+/* Atomic types are those that never need extra parentheses */
+AType :
+    LPAREN Type RPAREN  
+           { $2 } 
+  | BOOL
+      { fun ctx -> TypeBool }
+
+/* An "arrow type" is a sequence of atomic types separated by
+   arrows. */
+ArrowType :
+    AType ARROW ArrowType
+     { fun ctx -> TypeArr($1 ctx, $3 ctx) }
+  | AType
+            { $1 }
+
 Term :
     AppTerm
       { $1 }
-  | LAMBDA LCID DOT Term 
+  | LAMBDA LCID COLON Type DOT Term 
       { fun ctx ->
           let ctx1 = addName ctx $2.v in
-          TermAbs($1, $2.v, $4 ctx1) }
-  | LAMBDA USCORE DOT Term 
+          TermAbs($1, $2.v, $4 ctx, $6 ctx1) }
+  | LAMBDA USCORE COLON Type DOT Term 
       { fun ctx ->
           let ctx1 = addName ctx "_" in
-          TermAbs($1, "_", $4 ctx1) }
+          TermAbs($1, "_", $4 ctx, $6 ctx1) }
+  | IF Term THEN Term ELSE Term
+      { fun ctx -> TermIf($1, $2 ctx, $4 ctx, $6 ctx) }
 
 AppTerm :
     ATerm
@@ -150,6 +172,10 @@ ATerm :
   | LCID 
       { fun ctx ->
           TermVar($1.i, name2index $1.i ctx $1.v, ctxLength ctx) }
+  | TRUE
+      { fun ctx -> TermTrue($1) }
+  | FALSE
+      { fun ctx -> TermFalse($1) }
 
 
 

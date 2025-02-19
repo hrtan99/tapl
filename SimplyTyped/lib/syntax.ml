@@ -4,13 +4,22 @@ open Support.Error
 open Support.Pervasive
 
 (* Datatypes *)
+type ty = 
+  | TypeBool
+  | TypeArr of ty * ty
+
+
 type term =
     TermVar of info * int * int
-  | TermAbs of info * string * term
+  | TermAbs of info * string * ty * term
   | TermApp of info * term * term
+  | TermTrue of info
+  | TermFalse of info
+  | TermIf of info * term * term * term
 
 type binding =
     NameBind 
+  | VarBind of ty
 
 type context = (string * binding) list
 
@@ -68,8 +77,11 @@ let termMap onvar c t =
   let rec walk c t = 
     match t with
     | TermVar(fileInfo, x, n) -> onvar fileInfo c x n
-    | TermAbs(fileInfo, x, t1) -> TermAbs(fileInfo, x, walk (c + 1) t1)
+    | TermAbs(fileInfo, x, ty, t1) -> TermAbs(fileInfo, x, ty, walk (c + 1) t1)
     | TermApp(fileInfo, t1, t2) -> TermApp(fileInfo, walk c t1, walk c t2)
+    | TermTrue(fileInfo) -> TermTrue(fileInfo)
+    | TermFalse(fileInfo) -> TermFalse(fileInfo)
+    | TermIf(fileInfo, t1, t2, t3) -> TermIf(fileInfo, walk c t1, walk c t2, walk c t3)
   in walk c t
 
 let termShiftAbove d c t = 
@@ -108,32 +120,68 @@ let getBinding fileInfo ctx i =
       let msg = Printf.sprintf "Variable lookup failure: offset: %d, ctx size: %d" in
       errAt fileInfo (msg i (List.length ctx))
 
+let getTypeFromContext fileInfo ctx i =
+  match getBinding fileInfo ctx i with
+  | VarBind(ty) -> ty
+  | _ -> errAt fileInfo ("getTypeFromContext: Wrong kind of binding for variable" ^ (index2name fileInfo ctx i))
 
 
 (* Extracting file info *)
 let termInfo term = 
   match term with
   | TermVar(fileInfo, _, _) -> fileInfo
-  | TermAbs(fileInfo, _, _) -> fileInfo
+  | TermAbs(fileInfo, _, _, _) -> fileInfo
   | TermApp(fileInfo, _, _) -> fileInfo
+  | TermTrue(fileInfo) -> fileInfo
+  | TermFalse(fileInfo) -> fileInfo
+  | TermIf(fileInfo, _, _, _) -> fileInfo
 
 let small term = 
   match term with
   | TermVar(_, _, _) -> true
   | _ -> false
 
+let rec printTypeStr outer ty = match ty with
+  | ty -> printArrowType outer ty
+
+and printArrowType outer ty = match ty with 
+  | TypeArr(ty1, ty2) -> 
+      obox ();
+      printArrowType false ty1;
+      if outer then ps " ";
+      ps "->";
+      if outer then print_space () else break ();
+      printArrowType outer ty2;
+      cbox ()
+  | ty -> printAType outer ty
+
+and printAType outer ty = match ty with
+  | TypeBool -> ps "Bool"
+  | ty -> 
+      ps "("; printTypeStr outer ty; ps ")"
+
+let printType ty = printTypeStr true ty
+
 (* Printing *)
 let rec printTermStr outer ctx term = match term with
-    TermAbs(_, x, t) -> 
+  | TermAbs(_, x, termType, t) -> 
       let (ctx', x') = pickFreshName ctx x in
       obox ();
-      ps "lambda "; ps x'; ps "."; 
+      ps "lambda "; ps x'; ps ":";
+      printTypeStr false termType;
+      ps "."; 
       if (small t) && not outer then
         break ()
       else
         print_space ();
       printTermStr outer ctx' t;
       cbox ();
+  | TermIf(_, t1, t2, t3) ->
+      obox ();
+      ps "if "; printTermStr false ctx t1; ps " then ";
+      printTermStr false ctx t2; ps " else ";
+      printTermStr false ctx t3;
+      cbox ()
   | term -> printAppTerm outer ctx term
 
 and printAppTerm outer ctx term =
@@ -157,9 +205,13 @@ and printATerm outer ctx term =
           ^ (List.fold_left (fun str (x, _) -> str ^ " " ^x) "" ctx)
           ^ "}"
           )
+  | TermTrue(_) -> ps "true"
+  | TermFalse(_) -> ps "false"
   | term -> 
       ps "("; printTermStr outer ctx term; ps ")"
 
 let printTerm ctx term = printTermStr true ctx term
 
-let printBinding _ bind = match bind with NameBind -> ps "name"
+let printBinding _ bind = match bind with
+    NameBind -> ()
+  | VarBind(ty) -> ps ": "; printType ty
