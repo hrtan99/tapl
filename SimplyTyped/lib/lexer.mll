@@ -13,6 +13,12 @@ let reservedWords = [
   (* Keywords *)
   ("import", fun i -> Parser.IMPORT i);
   ("lambda", fun i -> Parser.LAMBDA i);
+  ("if", fun i -> Parser.IF i);
+  ("then", fun i -> Parser.THEN i);
+  ("else", fun i -> Parser.ELSE i);
+  ("true", fun i -> Parser.TRUE i);
+  ("false", fun i -> Parser.FALSE i);
+  ("Bool", fun i -> Parser.BOOL i);
   
   (* Symbols *)
   ("_", fun i -> Parser.USCORE i);

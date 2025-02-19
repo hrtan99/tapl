@@ -23,6 +23,11 @@ open Syntax
 /* Keyword tokens */
 %token <Support.Error.info> IMPORT
 %token <Support.Error.info> LAMBDA
+%token <Support.Error.info> THEN
+%token <Support.Error.info> ELSE
+%token <Support.Error.info> TRUE
+%token <Support.Error.info> FALSE
+%token <Support.Error.info> BOOL
 
 /* Identifier and constant value tokens */
 %token <string Support.Error.withInfo> UCID  /* uppercase-initial */
